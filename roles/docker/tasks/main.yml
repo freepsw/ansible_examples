@@ -1,0 +1,47 @@
+- name : uninstall old versions
+  yum:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - docker
+    - docker-common
+    - container-selinux
+    - docker-selinux
+    - docker-engine
+  become: true
+  become_user: root
+
+- name : install yum-utils
+  yum:
+    name: yum-utils
+    state: present
+  become: true
+
+- name : add stable repository
+  yum_repository:
+    name: dockerrepo
+    description: docker ce repository
+    baseurl: https://yum.dockerproject.org/repo/main/centos/7/ 
+    enabled: yes
+    gpgkey: https://yum.dockerproject.org/gpg
+    gpgcheck: yes
+  become: true
+
+
+- name : install docker-engine-1.12.6
+  yum:
+    name: docker-engine-1.12.6
+    enablerepo: dockerrepo
+    state: present
+  become: true
+
+- name : add user to docker group
+  user: name=rts groups=docker append=yes
+  become: True
+
+- name : start docker
+  service:
+    name: docker
+    enabled: yes
+    state: started
+  become: true

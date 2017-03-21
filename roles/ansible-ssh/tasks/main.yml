@@ -1,0 +1,7 @@
+- name : create ssh key file
+  shell: ssh-keygen -t rsa -f ~/.ssh/id_rsa -q -N ""
+  args:
+    creates: ~/.ssh/id_rsa
+
+- name : copy ssh public key to remote server
+  authorized_key: user=rts key="{{ lookup('file', '~/.ssh//id_rsa.pub') }}"
