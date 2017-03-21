@@ -1,0 +1,4 @@
+- name: ssh key setup
+  hosts: all
+  roles:
+    - role: ansible-ssh
