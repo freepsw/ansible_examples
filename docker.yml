@@ -1,4 +1,4 @@
-- name: install docker ce
+- name: install docker
   hosts: cloudz
   roles:
     - role: docker
