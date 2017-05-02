@@ -1,3 +1,0 @@
-[cloudz]
-169.56.72.226 ansible_connection=ssh        ansible_user=rts
-169.56.74.84  ansible_connection=ssh        ansible_user=rts

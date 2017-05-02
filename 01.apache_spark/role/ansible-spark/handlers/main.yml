@@ -4,7 +4,7 @@
 
 - name: stop spark-master
   become: yes
-  service: name=spark-master state=stopped enabled=no 
+  service: name=spark-master state=stopped enabled=no
 
 - name: restart spark-master
   become: yes
