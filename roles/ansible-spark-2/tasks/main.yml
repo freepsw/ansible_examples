@@ -1,0 +1,64 @@
+
+- name: set spark distribution fact
+  set_fact: spark_path=spark-{{ spark.version }}-bin-hadoop{{ spark.hadoop_version }}
+
+- name: check spark downloaded
+  local_action: >
+    command test -f {{ spark.temp_dir }}/{{ spark_path }}.tgz
+  register: spark_downloaded
+  failed_when: spark_downloaded.rc not in [0, 1]
+  changed_when: False
+  run_once: true
+
+- name: download spark
+  local_action: get_url url="{{ spark.mirror }}/{{ spark_path }}.tgz" dest="{{ spark.temp_dir }}"
+  when: spark_downloaded.rc == 1
+  run_once: true
+
+- name: create spark working directory
+  file:
+    path: "{{ spark.working_dir }}"
+    state: directory
+    owner: rts
+    group: rts
+
+- name: create install directory
+  file:
+    path: "{{ spark.install_dir }}"
+    state: directory
+    owner: rts
+    group: rts
+
+- name: unarchive to the install directory
+  unarchive:
+    src: "{{ spark.temp_dir }}/{{ spark_path }}.tgz"
+    dest: "{{ spark.install_dir }}"
+    owner: rts
+    group: rts
+    creates: "{{ spark.install_dir }}/{{ spark_path }}/RELEASE"
+
+- name: Copy spark-env.sh
+  shell: cp {{ spark.install_dir }}/{{ spark_path }}/conf/spark-env.sh.template {{ spark.install_dir }}/{{ spark_path }}/conf/spark-env.sh
+
+- name: Copy spark-defaults.conf
+  shell: cp {{ spark.install_dir }}/{{ spark_path }}/conf/spark-defaults.conf.template {{ spark.install_dir }}/{{ spark_path }}/conf/spark-defaults.conf
+
+- name: create a complete empty file
+  shell: touch {{ spark.install_dir }}/{{ spark_path }}/conf/slaves
+  when: inventory_hostname in groups['spark-masters']
+
+- name: delete line from slaves
+  lineinfile: dest={{ spark.install_dir }}/{{ spark_path }}/conf/slaves
+              regexp="^"
+              state=absent
+  when: inventory_hostname in groups['spark-masters']
+
+- name: add worker to slaves
+  lineinfile: dest={{ spark.install_dir }}/{{ spark_path }}/conf/slaves
+              line={{hostvars[item]['inventory_hostname']}}
+  with_items: "{{groups['spark-workers']}}"
+  when: inventory_hostname in groups['spark-masters']
+
+- name: start spark cluster on master node
+  shell: "{{ spark.install_dir }}/{{ spark_path }}/sbin/start-all.sh"
+  when: inventory_hostname in groups['spark-masters']
