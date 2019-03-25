@@ -1,0 +1,13 @@
+server1 ansible_ssh_port=22 ansible_ssh_host=35.187.208.165  ansible_user=freepsw_03 ansible_ssh_private_key_file=~/.ssh/freepsw03_rsa
+server2 ansible_ssh_port=22 ansible_ssh_host=35.221.108.142   ansible_user=freepsw_03 ansible_ssh_private_key_file=~/.ssh/freepsw03_rsa
+
+
+
+[Server]
+server1
+
+[kafka]
+server2
+
+[zookeeper]
+server2

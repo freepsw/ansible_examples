@@ -1,0 +1,16 @@
+---
+# Google Compute Engine required authentication global variables
+# (Replace 'YOUR_PROJECT_ID' with the Project ID used in creating your GCP project.)
+project: rapid-hall-228901
+credentials_file: ~/.ssh/freepsw04-admin-rapid-hall-228901-7128b4ac067b.json
+auth_kind: serviceaccount
+
+# Common Compute Engine instance variables
+machine_type: n1-standard-1
+image: https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/family/debian-9
+
+# Variables defined for us-central1-a
+name_zonea: myinstance1
+name_zoneb: myinstance2
+zone: us-central1-a
+region: us-central1

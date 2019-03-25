@@ -1,0 +1,13 @@
+- name: Test settings
+  hosts: Server
+  gather_facts: no
+  tasks:
+    - name: Create temporary directory to save rancher compose file
+      file: path="/home/freepsw_03/data" state=directory mode=0755
+
+    - name: Copy data file
+      copy:
+        src: "data/data.tar.gz"
+        dest: "/home/freepsw_03/data/"
+        mode: 0777
+        force: no

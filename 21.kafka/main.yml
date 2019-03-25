@@ -1,0 +1,23 @@
+---
+
+- hosts: kafka,zookeeper
+
+  vars:
+    dst_path: "/opt"
+    local_path: "/tmp"
+    confluent_version: "3.3.0"
+    confluent_url: "http://packages.confluent.io/archive/{{ confluent_version[:3] }}/confluent-oss-{{ confluent_version }}-2.11.tar.gz"
+    log_basepath: "/var/log"
+    data_basepath: "/var/data"
+    initscripts_path: "/usr/sbin"
+    conf_dest: "/etc/config"
+    default_kafka_topics: "msa-test"
+    oracle_java_set_as_default: yes
+    oracle_java_version: 8
+
+  roles:
+    - role: geerlingguy.java
+      when: "ansible_os_family == 'RedHat'"
+      java_packages:
+        - java-1.8.0-openjdk
+    - macunha1.confluent-kafka

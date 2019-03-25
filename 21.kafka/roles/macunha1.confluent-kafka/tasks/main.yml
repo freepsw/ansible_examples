@@ -1,0 +1,141 @@
+---
+
+
+- name: Create necessary users and groups
+  import_tasks: groups.yml
+  tags:
+    - groups
+
+- name: Install Python SE Linux lib
+  import_tasks: python-selinux.yml
+
+- name: Check if there's an unarchived Confluent package
+  stat:
+    path: "{{ dst_path }}/confluent-{{ confluent_version }}"
+  register: unarchived_confluent_package
+
+- block: # Try to download confluent from internet
+  - name: Download Confluent
+    get_url:
+      url: "{{ confluent_url }}"
+      dest: "{{ dst_path }}"
+      force: yes
+    become: true
+
+  rescue: # If it fail, download locally and then copy to hosts
+  - name: Download Confluent locally
+    get_url:
+      url: "{{ confluent_url }}"
+      dest: "{{ local_path }}"
+      force: yes
+    connection: local
+    become: no
+    run_once: yes
+
+  - name: Copy local Confluent package to hosts
+    copy:
+      src: "/tmp/confluent-oss-{{ confluent_version }}-2.11.tar.gz"
+      dest: "{{ dst_path }}/confluent-oss-{{ confluent_version }}-2.11.tar.gz"
+
+  always:
+  - name: Unarchive Confluent package
+    unarchive:
+      src: "{{ dst_path }}/confluent-oss-{{ confluent_version }}-2.11.tar.gz"
+      dest: "{{ dst_path }}"
+      mode: 0775
+      owner: kafka
+      group: wheel
+      remote_src: yes
+    become: true
+
+  - name: Remove residual file
+    file:
+      path: "{{ dst_path }}/confluent-oss-{{ confluent_version }}-2.11.tar.gz"
+      state: absent
+    become: true
+
+  when: not unarchived_confluent_package.stat.exists
+  tags:
+    - download
+
+- name: Configuration | Create directory
+  file:
+    path: "{{ conf_dest }}"
+    state: directory
+    owner: kafka
+    group: wheel
+    force: yes
+  become: true
+
+- name: Zookeeper | Include tasks
+  include_tasks: zookeeper.yml
+  when: inventory_hostname in zookeeper_group
+  become: yes
+  tags:
+    - service
+
+- name: "Kafka | Create secrets {{ ssl.path }}"
+  file:
+    path: "{{ ssl.path }}"
+    state: directory
+    owner: kafka
+    group: wheel
+    mode: 0600
+  become: yes
+
+- name: Kafka | Including tasks
+  become: yes
+  include_tasks: "kafka.yml"
+  when: inventory_hostname in kafka_group
+  tags:
+    - service
+
+# TO-DO: Make TLS useful again
+# - name: Configure security layer for Kafka
+#   import_tasks: "security.yml"
+#   vars:
+#     jkstores:
+#       - "{{ kafka_security.server.keystore }}"
+#       - "{{ kafka_security.server.truststore }}"
+#     keypass: "{{ keypass }}"
+#     templates:
+#       - kafka.properties
+#     service: kafka
+#   tags:
+#     - ssl
+
+- name: Tunning | Tune JVM heap sizes for Kafka
+  import_tasks: jvm-tunning.yml
+  tags:
+    - tunning
+
+- name: Logs | Create a dir for each service
+  file:
+    path: "{{ log_basepath }}/{{ item }}"
+    state: directory
+    mode: 0751
+    owner: kafka
+    group: wheel
+  with_items: "{{ confluent_services }}"
+  become: yes
+
+- name: Logs | Create symlink from Confluent directory
+  file:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    state: link
+    force: yes
+  with_items:
+    - src: "{{ dst_path }}/confluent-{{ confluent_version }}/logs/"
+      dest: "{{ log_basepath }}/confluent"
+  become: yes
+
+- name: Kafka | Configure and create default topics
+  import_tasks: "configure-topics.yml"
+  vars:
+    kafka_bins: "{{ dst_path }}/confluent-{{ confluent_version }}/bin"
+    topics: "{{ default_kafka_topics }}"
+  when: default_kafka_topics is defined
+  tags:
+    - kafka-topics
+    - configuration

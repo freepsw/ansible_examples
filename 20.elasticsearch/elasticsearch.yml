@@ -1,0 +1,12 @@
+- name: Install elasticsearch
+  hosts: Server
+  roles:
+    - role: elastic.elasticsearch
+  vars:
+    es_instance_name: "node1"
+    es_api_basic_auth_username: "admin"
+    es_api_basic_auth_password: "admin"
+    es_use_repository: false
+    es_custom_package_url: "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.5.1.rpm"
+    es_config:
+      network.host: "0.0.0.0"

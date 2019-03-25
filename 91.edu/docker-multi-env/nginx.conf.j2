@@ -1,0 +1,16 @@
+server {
+    server_name _;
+    {% if NGINX_ENABLE_SSL|default('False') == 'True' %}
+    listen 443;
+#    ssl on;
+
+#    ssl_certificate /etc/ssl/certs/ssl-cert.pem;
+#    ssl_certificate_key /etc/ssl/private/ssl-cert.key;
+    {% else %}
+    listen 80;
+    {% endif %}
+
+    location / {
+        proxy_pass http://localhost:8080;
+    }
+}

@@ -1,0 +1,22 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Config file automatic generated using zookeeper template from Ansible
+clientPortBindAddress={{ kafka_ip }}
+clientPort={{ zookeeper_port }}
+
+dataDir={{ zookeeper_data_dir }}
+dataLogDir={{ zookeeper_log_dir }}
+maxClientCnxns={{ zookeeper_max_cnxns }}
+
+initLimit={{ zookeeper_init_limit }}
+syncLimit={{ zookeeper_sync_limit }}
+
+{% for server in zookeeper_group %}
+server.{{ loop.index }}={{ hostvars.get(server).ansible_all_ipv4_addresses | first }}:2888:3888
+{% endfor %}

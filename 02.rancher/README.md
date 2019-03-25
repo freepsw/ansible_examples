@@ -50,7 +50,7 @@ rancher_agent_name: "agent"
 
 ```
 
-
+## 4. docker & rancher-server & rancher-host 설치
 ```
 > ansible-playbook -i inventories/staging/rancher-hosts rancher.yml
 ```
