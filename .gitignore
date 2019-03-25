@@ -1,7 +1,9 @@
 # server info
 staging
 hosts
+hosts.*
 rancher-hosts
+gce/*.json
 
 # Directories #
 /build/
